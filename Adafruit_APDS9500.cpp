@@ -183,18 +183,13 @@ bool Adafruit_APDS9500::_init(void) {
 */
 uint16_t Adafruit_APDS9500::getDetectedGestures(void) {
 
-  Adafruit_BusIO_Register gesture_flags1 =
-      // Adafruit_I2CDevice pointer, address, number of bytes
-      Adafruit_BusIO_Register(i2c_dev, APDS9500_Int_Flag_1);
+  buffer[0] = APDS9500_Int_Flag_1;
+  buffer[1] = 0; // kmown state is great
+  if (!i2c_dev->write_then_read(buffer, 1, buffer, 2)) {
+    return -1;
+  }
 
-  Adafruit_BusIO_Register gesture_flags2 =
-      // Adafruit_I2CDevice pointer, address, number of bytes
-      Adafruit_BusIO_Register(i2c_dev, APDS9500_Int_Flag_2);
-
-  uint8_t intFlag1 = gesture_flags1.read();
-  uint8_t intFlag2 = gesture_flags2.read();
-  uint16_t gestureResult = (intFlag2 << 8 | intFlag1);
-  return gestureResult;
+  return (buffer[1] << 8 | buffer[0]);
 }
 
 bool Adafruit_APDS9500::writeByte(uint8_t address, uint8_t value) {

@@ -22,6 +22,9 @@ void setup(void) {
 void loop() {
 
   uint16_t gesture_flags = apds.getDetectedGestures();
+  if(gesture_flags == -1){
+    Serial.println("Issue reading gesture state");
+  }
 
   if(gesture_flags & 0x01) Serial.println("UP event detected");
   if(gesture_flags & 0x02) Serial.println("DOWN event detected");
