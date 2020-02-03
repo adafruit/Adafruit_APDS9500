@@ -288,6 +288,8 @@ public:
 
 private:
   bool _init(void);
+  bool writeByte(uint8_t address, uint8_t value);
+  uint8_t buffer[2];
 
   Adafruit_I2CDevice *i2c_dev;
 };

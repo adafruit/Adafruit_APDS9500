@@ -66,74 +66,32 @@ bool Adafruit_APDS9500::begin(uint8_t i2c_address, TwoWire *wire) {
   if (!i2c_dev->begin()) {
     return false;
   }
-  Serial.println("past begin");
   return _init();
 }
 
 bool Adafruit_APDS9500::_init(void) {
-  Adafruit_BusIO_Register chip_id =
-      Adafruit_BusIO_Register(i2c_dev, APDS9500_PartID_L, 2, LSBFIRST);
 
-  Adafruit_BusIO_Register bank_select =
-      Adafruit_BusIO_Register(i2c_dev, APDS9500_R_RegBankSet);
+  // uint8_t buffer[2];
 
-  bank_select.write(0x00); // wake up sensor
-  // make sure we're talking to the right chip
-  if (chip_id.read() != APDS9500_CHIP_ID) {
+  // buffer[0] = APDS9500_R_RegBankSet;
+  // buffer[1] = 0;
+  // if(!i2c_dev->write(buffer, 2)){
+  //   Serial.println("Issue writing wake up buffer");
+  //   return false;
+  // }
+  if (!writeByte(APDS9500_R_RegBankSet, 0)){
     return false;
   }
 
-  //
-  // bool Adafruit_I2CDevice::write_then_read(uint8_t *write_buffer,
-  //                                          size_t write_len, uint8_t
-  //                                          *read_buffer, size_t read_len,
-  //                                          bool stop) {
+  buffer[0] = APDS9500_PartID_L;
+  buffer[1] = 0;
+  if(!i2c_dev->write_then_read(buffer, 1, buffer, 2)){
+    return false;
+  }
 
-  // uint8_t partID_L  = readByte(APDS9500_ADDRESS, APDS9500_PartID_L);
-  // uint8_t partID_H  = readByte(APDS9500_ADDRESS, APDS9500_PartID_H);
-  // uint8_t versionID = readByte(APDS9500_ADDRESS, APDS9500_VersionID);
-
-  // uint16_t partID;
-  // if(!i2c_dev->read((uint8_t *) &partID, 2)) {
-  //     return false;
-  // }
-
-  // uint8_t versionID
-  // if(!i2c_dev->read(&versionID)){
-  //   return false;
-  // }
-
-  // = readByte(APDS9500_ADDRESS, APDS9500_VersionID);
-
-  // = i2c_dev(APDS9500_ADDRESS, APDS9500_PartID_L);
-  // Serial.println("APDS9500 Gesture Sensor");
-  // Serial.print("Part ID = 0x"); Serial.print(partID_L, HEX);
-  // Serial.print(" and 0x"); Serial.println(partID_H, HEX);
-  // Serial.println("Part ID should be 0x20 and 0x76!");
-  // Serial.println("  ");
-  // Serial.print("Version ID = 0x0"); Serial.println(versionID, HEX);
-
-  // if(partID_L == 0x20 && partID_H == 0x76)
-  // {
-  //   Serial.println("APDS9500 ID confirmed!");
-  // }
-
-  // // define io pins
-  // pinMode(myLed, OUTPUT);
-  // digitalWrite(myLed, HIGH);  // start with led off, active HIGH
-  // pinMode(intPin, INPUT);
-
-  /* Initialize Gesture Sensor */
-  // Choose bank 0
-
-  // uint8_t output_buffer[8];
-
-  // output_buffer[0] = channel_a_value >> 8;
-  // output_buffer[1] = channel_a_value & 0xFF;
-
-  // if (!i2c_dev->write(output_buffer, 8)) {
-  //   return false;
-  // }
+  if ((buffer[1]<<8 | buffer[0]) != APDS9500_CHIP_ID){
+    return false;
+  }
 
   // writeByte(APDS9500_ADDRESS, APDS9500_R_RegBankSet, 0x00);         // select
   // bank 0
@@ -252,4 +210,10 @@ uint16_t Adafruit_APDS9500::getDetectedGestures(void) {
   uint8_t intFlag1 = gesture_flags1.read();
   uint8_t intFlag2 = gesture_flags2.read();
   uint16_t gestResult = (intFlag2 << 8 | intFlag1);
+}
+
+bool Adafruit_APDS9500::writeByte(uint8_t address, uint8_t value){
+  buffer[0] = address;
+  buffer[1] = value;
+  return i2c_dev->write(buffer, 2);
 }
